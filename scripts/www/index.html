@@ -1,88 +1,2082 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="stylesheet" href="./static/css/styles.css" />
-        <meta
-            http-equiv="Content-Security-Policy"
-            content="default-src * 'unsafe-inline' 'unsafe-eval'"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Tauri App</title>
-        <script src="./static/js/main.js"></script>
-    </head>
-    <body>
-        <main class="container">
-            <h1>Welcome to TauriMan</h1>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6ba995">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="逸百年康养">
+    <title>逸百年康养美容客户管理系统</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background: #f5f5f5;
+            padding: 10px;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .header {
+            text-align: center;
+            padding: 15px 0;
+            background: #6ba995;
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .menu {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .menu button {
+            flex: 1;
+            min-width: 30%;
+            padding: 10px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 2px 4px #00000015;
+        }
+        .menu button.active {
+            background: #6ba995;
+            color: white;
+        }
+        .form-box {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .form-box input, .form-box select, .form-box textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+        .btn {
+            background: #6ba995;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        .btn-red {
+            background: #e65050;
+        }
+        .btn-blue {
+            background: #4092e8;
+        }
+        .list-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            border-left: 4px solid #6ba995;
+        }
+        .list-item .title {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .list-item .info {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .tip {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        /* 登录页面样式 */
+        .login-tab {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+        }
+        
+        .login-tab.active {
+            color: #6ba995;
+            border-bottom: 2px solid #6ba995;
+        }
+        
+        .login-form {
+            display: none;
+        }
+        
+        .login-form.active {
+            display: block;
+        }
+        /* 打印样式 */
+        @media print {
+            .menu, .header, .form-box, button { display: none !important; }
+            .list-item { border: none; padding: 5px; }
+        }
+    </style>
+</head>
+<body>
 
-            <div class="row">
-                <a
-                    href="https://tauri.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        src="./assets/tauri.svg"
-                        class="logo tauri"
-                        alt="Tauri logo"
-                    />
-                </a>
-                <a
-                    href="https://pakeplus.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        src="https://hk.gh-proxy.org/https://github.com/Sjj1024/PakePlus/blob/main/app-icon.png"
-                        class="logo vanilla"
-                        alt="JavaScript logo"
-                    />
-                </a>
+<!-- 登录页面 -->
+<div id="login" class="page active">
+    <div class="form-box" style="max-width: 400px; margin: 50px auto;">
+        <h3 style="text-align: center; color: #6ba995; margin-bottom: 30px;">🔐 系统登录</h3>
+        
+        <!-- 登录方式切换 -->
+        <div style="display: flex; margin-bottom: 20px; border-bottom: 1px solid #ddd;">
+            <button id="loginTab" class="login-tab active" onclick="switchLoginTab('login')">密码登录</button>
+            <button id="codeLoginTab" class="login-tab" onclick="switchLoginTab('codeLogin')">验证码登录</button>
+            <button id="registerTab" class="login-tab" onclick="switchLoginTab('register')">注册账号</button>
+        </div>
+        
+        <!-- 密码登录 -->
+        <div id="loginForm" class="login-form active">
+            <input type="text" id="loginPhone" placeholder="手机号码" style="margin-bottom: 10px;">
+            <input type="password" id="loginPassword" placeholder="登录密码" style="margin-bottom: 10px;">
+            <button class="btn" onclick="loginWithPassword()" style="margin-bottom: 10px;">登录</button>
+            <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                <a href="javascript:switchLoginTab('codeLogin')" style="color: #4092e8;">使用验证码登录</a>
+                <a href="javascript:switchLoginTab('register')" style="color: #4092e8;">注册新账号</a>
             </div>
-            <p>Click to get data</p>
-            <form class="row" id="greet-form">
-                <input id="greet-input" placeholder="Enter a name..." />
-                <button type="submit" id="getdata">GET DATA</button>
-            </form>
-            <div class="functions">
-                <a href="./book.html" target="_self">跳转到book.html</a>
-                <a
-                    href="https://www.baidu.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >跳到百度blank
-                </a>
-                <a
-                    href="https://www.baidu.com"
-                    target="_self"
-                    rel="noopener noreferrer"
-                >
-                    跳到百度self
-                </a>
-                <button onclick="sayHello()">点击我</button>
-                <button onclick="sayHello()">下载文件</button>
-                <button onclick="sayHello()">上传文件</button>
-                <button onclick="sayHello()">访问相机</button>
-                <button onclick="sayHello()">访问麦克风</button>
-                <button onclick="sayHello()">访问相册</button>
-                <button class="btn" onclick="openWechat()">打开微信</button>
-                <button class="btn" onclick="openWechatScan()">
-                    打开扫一扫
-                </button>
-                <button class="btn" onclick="openZhihu()">打开知乎</button>
-                <button onclick="sayHello()">打开抖音</button>
-                <button onclick="sayHello()">用浏览器打开</button>
-                <button>打开知乎</button>
+        </div>
+        
+        <!-- 验证码登录 -->
+        <div id="codeLoginForm" class="login-form">
+            <input type="text" id="codePhone" placeholder="手机号码" style="margin-bottom: 10px;">
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="verificationCode" placeholder="验证码" style="flex: 1; margin-bottom: 10px;">
+                <button id="sendCodeBtn" class="btn btn-blue" onclick="sendVerificationCode()" style="flex-shrink: 0; padding: 0 15px;">获取验证码</button>
             </div>
-            <p id="greet-msg"></p>
-            <img src="./static/image/cursor.jpeg" alt="logo" />
-            <video
-                src="https://hk.gh-proxy.org/https://github.com/Sjj1024/PakePlus/blob/main/docs/static/videos/pakeplus.mp4"
-                autoplay
-                controls
-                style="width: 100%; height: 100%"
-            ></video>
-            <audio src="./static/music/yin.mp3" controls></audio>
-        </main>
-    </body>
+            <button class="btn" onclick="loginWithCode()" style="margin-bottom: 10px;">登录</button>
+            <div style="text-align: center; font-size: 12px;">
+                <a href="javascript:switchLoginTab('login')" style="color: #4092e8;">使用密码登录</a>
+            </div>
+        </div>
+        
+        <!-- 注册 -->
+        <div id="registerForm" class="login-form">
+            <input type="text" id="registerPhone" placeholder="手机号码" style="margin-bottom: 10px;">
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="registerCode" placeholder="验证码" style="flex: 1; margin-bottom: 10px;">
+                <button id="sendRegisterCodeBtn" class="btn btn-blue" onclick="sendRegisterCode()" style="flex-shrink: 0; padding: 0 15px;">获取验证码</button>
+            </div>
+            <input type="password" id="registerPassword" placeholder="设置登录密码" style="margin-bottom: 10px;">
+            <input type="password" id="registerConfirmPassword" placeholder="确认密码" style="margin-bottom: 10px;">
+            <button class="btn" onclick="registerUser()" style="margin-bottom: 10px;">注册</button>
+            <div style="text-align: center; font-size: 12px;">
+                <a href="javascript:switchLoginTab('login')" style="color: #4092e8;">已有账号？去登录</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="header" style="display: none;">
+    <h2>逸百年康养美容客户管理系统</h2>
+    <div style="font-size: 12px; margin-top: 5px; cursor: pointer;" onclick="logout()">退出登录</div>
+</div>
+
+<div class="menu" style="display: none;">
+    <button onclick="goPage('home')">首页</button>
+    <button onclick="goPage('customer')">客户管理</button>
+    <button onclick="goPage('card')">客户开卡</button>
+    <button onclick="goPage('checkin')">客户打卡</button>
+    <button onclick="goPage('cancel')">销卡办理</button>
+    <button onclick="goPage('employee')">员工管理</button>
+    <button onclick="goPage('data')">数据中心</button>
+</div>
+
+<!-- 首页 -->
+<div id="home" class="page">
+    <div class="form-box">
+        <h3>📊 快捷操作</h3>
+        <button class="btn" onclick="goPage('customer')">客户登记</button>
+        <button class="btn" onclick="goPage('card')">客户开卡</button>
+        <button class="btn" onclick="goPage('checkin')">客户打卡</button>
+        <button class="btn" onclick="goPage('cancel')">销卡办理</button>
+        <button class="btn" onclick="goPage('employee')">员工管理</button>
+        <button class="btn" onclick="goPage('data')">数据中心</button>
+    </div>
+</div>
+
+<!-- 客户管理 -->
+<div id="customer" class="page">
+    <div class="form-box">
+        <h3>👤 客户登记</h3>
+        <input id="c_name" type="text" placeholder="客户姓名">
+        <input id="c_tel" type="text" placeholder="联系电话">
+        <input id="c_age" type="number" placeholder="年龄">
+        <input id="c_birthday" type="date" placeholder="生日">
+        <input id="c_address" type="text" placeholder="家庭住址">
+        <input id="c_wechat" type="text" placeholder="客户微信">
+        <input id="c_remark" type="text" placeholder="备注（需求/其他）">
+        <button class="btn" onclick="saveCustomer()">保存客户</button>
+    </div>
+    <div class="form-box">
+        <h3>🔍 客户搜索</h3>
+        <input id="search_customer" type="text" placeholder="输入姓名或电话搜索" onkeyup="searchCustomer()">
+    </div>
+    <div id="customerList"></div>
+</div>
+
+<!-- 客户开卡 -->
+<div id="card" class="page">
+    <div class="form-box">
+        <h3>💳 客户开卡</h3>
+        <select id="card_name">
+            <option value="">请选择客户</option>
+        </select>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="card_type" style="flex: 1;">
+                <option>康养卡</option>
+                <option>美容卡</option>
+                <option>综合卡</option>
+                <option>体验卡</option>
+                <option>次卡</option>
+                <option>季卡</option>
+                <option>年卡</option>
+            </select>
+            <button type="button" onclick="openCardTypeSettings()" style="padding: 10px 15px; background: #4092e8; color: white; border: none; border-radius: 6px; cursor: pointer;">⚙️ 设置</button>
+        </div>
+        <input id="card_price" type="number" placeholder="卡金额">
+        <input id="card_times" type="number" placeholder="总次数">
+        <input id="card_date" type="date" placeholder="开卡日期">
+
+        <!-- 👇 客户手写签名区域 -->
+        <div style="margin-top: 10px;">
+            <p style="font-size: 14px; color: #666; margin-bottom: 5px;">客户签名确认：</p>
+            <canvas id="card_sign" width="300" height="100" style="border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: crosshair;"></canvas>
+            <button type="button" onclick="clearCardSignature()" style="margin-top: 5px; padding: 5px 10px; font-size: 12px; background: #e65050; color: white; border: none; border-radius: 4px;">清除签名</button>
+        </div>
+
+        <!-- 👇 员工选择器 -->
+        <div style="margin-top: 10px;">
+            <p style="font-size: 14px; color: #666; margin-bottom: 5px;">员工签字确认：</p>
+            <select id="staff_sign" style="width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 15px;">
+                <option value="">请选择员工</option>
+            </select>
+        </div>
+
+        <button class="btn" onclick="saveCard()">确认开卡</button>
+        <button class="btn btn-blue" onclick="printCardList()">打印开卡记录</button>
+    </div>
+    <div id="cardList"></div>
+</div>
+
+<!-- 卡类型设置弹窗 -->
+<div id="cardTypeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px;">
+        <h3 style="margin-top: 0; color: #6ba995;">⚙️ 卡类型设置</h3>
+        <div style="margin: 15px 0;">
+            <input id="new_card_type" type="text" placeholder="输入新的卡类型" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px;">
+            <button type="button" onclick="addCardType()" style="width: 100%; padding: 10px; background: #6ba995; color: white; border: none; border-radius: 6px; cursor: pointer;">添加卡类型</button>
+        </div>
+        <div style="max-height: 200px; overflow-y: auto;">
+            <h4 style="margin-bottom: 10px;">现有卡类型：</h4>
+            <div id="cardTypeList" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+        </div>
+        <button type="button" onclick="closeCardTypeModal()" style="margin-top: 15px; padding: 10px 20px; background: #e65050; color: white; border: none; border-radius: 6px; cursor: pointer;">关闭</button>
+    </div>
+</div>
+
+<!-- 客户打卡 -->
+<div id="checkin" class="page">
+    <div class="form-box">
+        <h3>✅ 客户打卡（自动扣次）</h3>
+
+        <!-- 👇 客户姓名改为下拉选择器，自动加载已开卡客户 -->
+        <select id="in_name" onchange="selectCustomer()">
+            <option value="">请选择客户</option>
+        </select>
+
+        <!-- 👇 客户的所有卡项目选择器 -->
+        <select id="in_card" onchange="selectCard()">
+            <option value="">请选择卡项目</option>
+        </select>
+
+        <!-- 👇 自动显示卡类型 -->
+        <input id="show_type" type="text" placeholder="卡类型" disabled>
+
+        <!-- 👇 自动显示剩余次数 -->
+        <input id="show_remain" type="text" placeholder="剩余次数" disabled>
+
+        <!-- 👇 服务技师改为下拉选择器 -->
+        <select id="in_tech">
+            <option value="">请选择服务技师</option>
+        </select>
+
+        <!-- 👇 技师手工费选择器 -->
+        <select id="in_tech_fee">
+            <option value="0">请选择技师手工费</option>
+            <option value="10">10元</option>
+            <option value="15">15元</option>
+            <option value="20">20元</option>
+            <option value="25">25元</option>
+            <option value="30">30元</option>
+            <option value="35">35元</option>
+            <option value="40">40元</option>
+            <option value="45">45元</option>
+        </select>
+
+        <textarea id="in_remark" placeholder="服务内容/身体情况"></textarea>
+
+        <!-- 👇 客户手写签名区域 -->
+        <div style="margin-top: 10px;">
+            <p style="font-size: 14px; color: #666; margin-bottom: 5px;">客户签名：</p>
+            <canvas id="signature" width="300" height="100" style="border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: crosshair;"></canvas>
+            <button type="button" onclick="clearSignature()" style="margin-top: 5px; padding: 5px 10px; font-size: 12px; background: #e65050; color: white; border: none; border-radius: 4px;">清除签名</button>
+        </div>
+
+        <button class="btn" onclick="saveCheckin()">确认打卡（扣1次）</button>
+        <button class="btn btn-blue" onclick="printCheckinList()">打印打卡记录</button>
+    </div>
+    <h3 style="margin:10px 0;color:#333;">📋 打卡记录列表</h3>
+    <div id="checkinList"></div>
+</div>
+
+<!-- 销卡办理 -->
+<div id="cancel" class="page">
+    <div class="form-box">
+        <h3>🗑️ 销卡办理（注销/退款）</h3>
+        <!-- 👇 客户姓名选择器 -->
+        <select id="cancel_name" onchange="selectCancelCustomer()" style="width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 15px;">
+            <option value="">请选择客户</option>
+        </select>
+        <!-- 👇 卡类型选择器 -->
+        <select id="cancel_card_type" style="width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 15px;">
+            <option value="">请选择卡类型</option>
+        </select>
+        <!-- 👇 销卡原因选择器 -->
+        <select id="cancel_reason" style="width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 15px;">
+            <option value="">请选择销卡原因</option>
+            <option value="自愿">自愿</option>
+            <option value="到期">到期</option>
+            <option value="退款">退款</option>
+        </select>
+        <input id="cancel_refund" type="number" placeholder="退款金额（无则填0）">
+        <!-- 👇 客户手写签名区域 -->
+        <div style="margin-top: 10px;">
+            <p style="font-size: 14px; color: #666; margin-bottom: 5px;">客户签字确认：</p>
+            <canvas id="cancel_sign" width="300" height="100" style="border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: crosshair;"></canvas>
+            <button type="button" onclick="clearCancelSignature()" style="margin-top: 5px; padding: 5px 10px; font-size: 12px; background: #e65050; color: white; border: none; border-radius: 4px;">清除签名</button>
+        </div>
+        <button class="btn btn-red" onclick="saveCancel()">确认销卡</button>
+        <button class="btn btn-blue" onclick="printCancelList()">打印销卡记录</button>
+    </div>
+    <div id="cancelList"></div>
+</div>
+
+<!-- 数据中心 -->
+<div id="data" class="page">
+    <div class="form-box">
+        <h3>📊 数据中心</h3>
+        <div id="dataStats"></div>
+    </div>
+    <div class="form-box">
+        <h3>📈 打卡趋势（近7天）</h3>
+        <div id="checkinTrend" style="display:flex;align-items:flex-end;height:150px;gap:10px;padding:10px 0;"></div>
+    </div>
+    <div class="form-box">
+        <h3>🗄️ 数据管理</h3>
+        <button class="btn btn-red" onclick="clearAllData()">清空所有数据</button>
+        <button class="btn btn-blue" onclick="exportData()">导出数据备份</button>
+        <button class="btn" onclick="importData()">导入数据备份</button>
+        <input type="file" id="importFile" accept=".json" style="display:none;" onchange="handleImportFile(event)">
+    </div>
+</div>
+
+<!-- 员工管理 -->
+<div id="employee" class="page">
+    <div class="form-box">
+        <h3>👥 员工管理</h3>
+        <input id="e_name" type="text" placeholder="员工姓名">
+        <input id="e_position" type="text" placeholder="职位">
+        <input id="e_tel" type="text" placeholder="联系电话">
+        <input id="e_remark" type="text" placeholder="备注">
+        <button class="btn" onclick="saveEmployee()">保存员工</button>
+    </div>
+    <div id="employeeList"></div>
+</div>
+
+<script>
+// 注册Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./service-worker.js')
+            .then(function(registration) {
+                console.log('Service Worker 注册成功:', registration.scope);
+            })
+            .catch(function(error) {
+                console.log('Service Worker 注册失败:', error);
+            });
+    });
+}
+
+// 本地数据
+// 初始化数据缓存
+let dataCache = {
+    customers: JSON.parse(localStorage.getItem('yibainian_customers')) || [],
+    cards: JSON.parse(localStorage.getItem('yibainian_cards')) || [],
+    checkins: JSON.parse(localStorage.getItem('yibainian_checkins')) || [],
+    cancels: JSON.parse(localStorage.getItem('yibainian_cancels')) || [],
+    employees: JSON.parse(localStorage.getItem('yibainian_employees')) || []
+};
+
+// 数据操作函数
+function saveData() {
+    localStorage.setItem('yibainian_customers', JSON.stringify(dataCache.customers));
+    localStorage.setItem('yibainian_cards', JSON.stringify(dataCache.cards));
+    localStorage.setItem('yibainian_checkins', JSON.stringify(dataCache.checkins));
+    localStorage.setItem('yibainian_cancels', JSON.stringify(dataCache.cancels));
+    localStorage.setItem('yibainian_employees', JSON.stringify(dataCache.employees));
+}
+
+// 为了兼容现有代码，创建别名
+let customers = dataCache.customers;
+let cards = dataCache.cards;
+let checkins = dataCache.checkins;
+let cancels = dataCache.cancels;
+let packages = dataCache.employees;
+
+// 用户管理
+let users = JSON.parse(localStorage.getItem('yibainian_users')) || [];
+let currentUser = JSON.parse(localStorage.getItem('yibainian_currentUser')) || null;
+
+// 签名Canvas初始化
+let canvas, ctx, isDrawing = false, lastX = 0, lastY = 0;
+
+function initCanvas() {
+    canvas = document.getElementById('signature');
+    if(!canvas) return;
+    ctx = canvas.getContext('2d');
+    
+    // 设置Canvas尺寸
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    
+    // 设置绘图样式
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // 鼠标事件
+    canvas.addEventListener('mousedown', function(e) {
+        isDrawing = true;
+        let rect = canvas.getBoundingClientRect();
+        lastX = e.clientX - rect.left;
+        lastY = e.clientY - rect.top;
+    });
+
+    canvas.addEventListener('mousemove', function(e) {
+        if(!isDrawing) return;
+        let rect = canvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        lastX = x;
+        lastY = y;
+    });
+
+    canvas.addEventListener('mouseup', function() {
+        isDrawing = false;
+    });
+
+    canvas.addEventListener('mouseout', function() {
+        isDrawing = false;
+    });
+    
+    // 触摸事件支持
+    canvas.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        isDrawing = true;
+        let rect = canvas.getBoundingClientRect();
+        let touch = e.touches[0];
+        lastX = touch.clientX - rect.left;
+        lastY = touch.clientY - rect.top;
+    });
+    
+    canvas.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        if(!isDrawing) return;
+        let rect = canvas.getBoundingClientRect();
+        let touch = e.touches[0];
+        let x = touch.clientX - rect.left;
+        let y = touch.clientY - rect.top;
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        lastX = x;
+        lastY = y;
+    });
+    
+    canvas.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        isDrawing = false;
+    });
+    
+    canvas.addEventListener('touchcancel', function(e) {
+        e.preventDefault();
+        isDrawing = false;
+    });
+}
+
+function clearSignature() {
+    if(ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// 开卡页面的签名Canvas初始化
+let cardCanvas, cardCtx;
+let cardIsDrawing = false;
+let cardLastX = 0, cardLastY = 0;
+
+function initCardCanvas() {
+    cardCanvas = document.getElementById('card_sign');
+    if(cardCanvas) {
+        cardCtx = cardCanvas.getContext('2d');
+        
+        // 设置Canvas尺寸
+        cardCanvas.width = cardCanvas.offsetWidth;
+        cardCanvas.height = cardCanvas.offsetHeight;
+        
+        // 设置绘图样式
+        cardCtx.strokeStyle = '#000';
+        cardCtx.lineWidth = 2;
+        cardCtx.lineCap = 'round';
+        cardCtx.lineJoin = 'round';
+        
+        // 鼠标事件
+        cardCanvas.addEventListener('mousedown', function(e) {
+            cardIsDrawing = true;
+            let rect = cardCanvas.getBoundingClientRect();
+            cardLastX = e.clientX - rect.left;
+            cardLastY = e.clientY - rect.top;
+        });
+        
+        cardCanvas.addEventListener('mousemove', function(e) {
+            if(!cardIsDrawing) return;
+            let rect = cardCanvas.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+            cardCtx.beginPath();
+            cardCtx.moveTo(cardLastX, cardLastY);
+            cardCtx.lineTo(x, y);
+            cardCtx.stroke();
+            cardLastX = x;
+            cardLastY = y;
+        });
+        
+        cardCanvas.addEventListener('mouseup', function() {
+            cardIsDrawing = false;
+        });
+        
+        cardCanvas.addEventListener('mouseout', function() {
+            cardIsDrawing = false;
+        });
+        
+        // 触摸事件支持
+        cardCanvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            cardIsDrawing = true;
+            let rect = cardCanvas.getBoundingClientRect();
+            let touch = e.touches[0];
+            cardLastX = touch.clientX - rect.left;
+            cardLastY = touch.clientY - rect.top;
+        });
+        
+        cardCanvas.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            if(!cardIsDrawing) return;
+            let rect = cardCanvas.getBoundingClientRect();
+            let touch = e.touches[0];
+            let x = touch.clientX - rect.left;
+            let y = touch.clientY - rect.top;
+            cardCtx.beginPath();
+            cardCtx.moveTo(cardLastX, cardLastY);
+            cardCtx.lineTo(x, y);
+            cardCtx.stroke();
+            cardLastX = x;
+            cardLastY = y;
+        });
+        
+        cardCanvas.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            cardIsDrawing = false;
+        });
+        
+        cardCanvas.addEventListener('touchcancel', function(e) {
+            e.preventDefault();
+            cardIsDrawing = false;
+        });
+    }
+}
+
+function clearCardSignature() {
+    if(cardCtx) cardCtx.clearRect(0, 0, cardCanvas.width, cardCanvas.height);
+}
+
+// 销卡办理页面的签名Canvas初始化
+let cancelCanvas, cancelCtx;
+let cancelIsDrawing = false;
+let cancelLastX = 0, cancelLastY = 0;
+
+function initCancelCanvas() {
+    cancelCanvas = document.getElementById('cancel_sign');
+    if(cancelCanvas) {
+        cancelCtx = cancelCanvas.getContext('2d');
+        
+        // 设置Canvas尺寸
+        cancelCanvas.width = cancelCanvas.offsetWidth;
+        cancelCanvas.height = cancelCanvas.offsetHeight;
+        
+        // 设置绘图样式
+        cancelCtx.strokeStyle = '#000';
+        cancelCtx.lineWidth = 2;
+        cancelCtx.lineCap = 'round';
+        cancelCtx.lineJoin = 'round';
+        
+        // 鼠标事件
+        cancelCanvas.addEventListener('mousedown', function(e) {
+            cancelIsDrawing = true;
+            let rect = cancelCanvas.getBoundingClientRect();
+            cancelLastX = e.clientX - rect.left;
+            cancelLastY = e.clientY - rect.top;
+        });
+        
+        cancelCanvas.addEventListener('mousemove', function(e) {
+            if(!cancelIsDrawing) return;
+            let rect = cancelCanvas.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+            cancelCtx.beginPath();
+            cancelCtx.moveTo(cancelLastX, cancelLastY);
+            cancelCtx.lineTo(x, y);
+            cancelCtx.stroke();
+            cancelLastX = x;
+            cancelLastY = y;
+        });
+        
+        cancelCanvas.addEventListener('mouseup', function() {
+            cancelIsDrawing = false;
+        });
+        
+        cancelCanvas.addEventListener('mouseout', function() {
+            cancelIsDrawing = false;
+        });
+        
+        // 触摸事件支持
+        cancelCanvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            cancelIsDrawing = true;
+            let rect = cancelCanvas.getBoundingClientRect();
+            let touch = e.touches[0];
+            cancelLastX = touch.clientX - rect.left;
+            cancelLastY = touch.clientY - rect.top;
+        });
+        
+        cancelCanvas.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            if(!cancelIsDrawing) return;
+            let rect = cancelCanvas.getBoundingClientRect();
+            let touch = e.touches[0];
+            let x = touch.clientX - rect.left;
+            let y = touch.clientY - rect.top;
+            cancelCtx.beginPath();
+            cancelCtx.moveTo(cancelLastX, cancelLastY);
+            cancelCtx.lineTo(x, y);
+            cancelCtx.stroke();
+            cancelLastX = x;
+            cancelLastY = y;
+        });
+        
+        cancelCanvas.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            cancelIsDrawing = false;
+        });
+        
+        cancelCanvas.addEventListener('touchcancel', function(e) {
+            e.preventDefault();
+            cancelIsDrawing = false;
+        });
+    }
+}
+
+function clearCancelSignature() {
+    if(cancelCtx) cancelCtx.clearRect(0, 0, cancelCanvas.width, cancelCanvas.height);
+}
+
+// 页面切换
+let pages = document.querySelectorAll('.page');
+function goPage(id) {
+    pages.forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if(id === 'customer') renderCustomerList();
+    if(id === 'card') {
+        renderCardList();
+        loadCardCustomerList();
+        loadCardStaffList();
+        clearCardSignature();
+        updateCardTypeSelect();
+        setTimeout(initCardCanvas, 100);
+    }
+    if(id === 'checkin') {
+        renderCheckinList();
+        loadCustomerList();
+        loadTechList();
+        clearSignature();
+        setTimeout(initCanvas, 100);
+    }
+    if(id === 'cancel') {
+        renderCancelList();
+        loadCancelCustomerList();
+        clearCancelSignature();
+        setTimeout(initCancelCanvas, 100);
+    }
+    if(id === 'employee') renderEmployeeList();
+    if(id === 'data') renderDataCenter();
+}
+
+// 加载客户列表到打卡下拉框
+function loadCustomerList() {
+    let sel = document.getElementById('in_name');
+    sel.innerHTML = '<option value="">请选择客户</option>';
+    let unique = [...new Set(cards.map(i=>i.name))];
+    unique.forEach(name=>{
+        sel.innerHTML += `<option value="${name}">${name}</option>`;
+    });
+}
+
+// 加载员工列表到技师选择器
+function loadTechList() {
+    let sel = document.getElementById('in_tech');
+    sel.innerHTML = '<option value="">请选择服务技师</option>';
+    packages.forEach(emp => {
+        sel.innerHTML += `<option value="${emp.name}">${emp.name} (${emp.position || '员工'})</option>`;
+    });
+}
+
+// 加载员工列表到开卡页面的员工选择器
+function loadCardStaffList() {
+    let sel = document.getElementById('staff_sign');
+    sel.innerHTML = '<option value="">请选择员工</option>';
+    packages.forEach(emp => {
+        sel.innerHTML += `<option value="${emp.name}">${emp.name} (${emp.position || '员工'})</option>`;
+    });
+}
+
+// 加载客户列表到销卡办理页面的客户选择器
+function loadCancelCustomerList() {
+    let sel = document.getElementById('cancel_name');
+    sel.innerHTML = '<option value="">请选择客户</option>';
+    customers.forEach(customer => {
+        sel.innerHTML += `<option value="${customer.name}">${customer.name} (${customer.tel})</option>`;
+    });
+}
+
+// 选择客户后加载该客户的卡类型
+function selectCancelCustomer() {
+    let name = document.getElementById('cancel_name').value;
+    let cardSel = document.getElementById('cancel_card_type');
+    
+    if(!name) {
+        cardSel.innerHTML = '<option value="">请选择卡类型</option>';
+        return;
+    }
+    
+    let customerCards = cards.filter(c => c.name === name);
+    cardSel.innerHTML = '<option value="">请选择卡类型</option>';
+    customerCards.forEach(card => {
+        cardSel.innerHTML += `<option value="${card.type}">${card.type} (剩余${card.remain}次)</option>`;
+    });
+}
+
+// 选择客户后，加载该客户的所有卡到卡项目选择器
+function selectCustomer() {
+    let name = document.getElementById('in_name').value;
+    let cardSel = document.getElementById('in_card');
+
+    if(!name) {
+        cardSel.innerHTML = '<option value="">请选择卡项目</option>';
+        document.getElementById('show_type').value = '';
+        document.getElementById('show_remain').value = '';
+        return;
+    }
+
+    let customerCards = cards.filter(c=>c.name===name);
+    cardSel.innerHTML = '<option value="">请选择卡项目</option>';
+    customerCards.forEach((card, index) => {
+        cardSel.innerHTML += `<option value="${index}">${card.type} (剩余${card.remain}次)</option>`;
+    });
+
+    document.getElementById('show_type').value = '';
+    document.getElementById('show_remain').value = '';
+}
+
+// 选择卡后显示卡类型和剩余次数
+function selectCard() {
+    let name = document.getElementById('in_name').value;
+    let cardIndex = document.getElementById('in_card').value;
+
+    if(!cardIndex) {
+        document.getElementById('show_type').value = '';
+        document.getElementById('show_remain').value = '';
+        return;
+    }
+
+    let customerCards = cards.filter(c=>c.name===name);
+    let selectedCard = customerCards[parseInt(cardIndex)];
+
+    if(selectedCard) {
+        document.getElementById('show_type').value = selectedCard.type;
+        document.getElementById('show_remain').value = selectedCard.remain;
+    }
+}
+
+// 保存客户
+function saveCustomer() {
+    let name = document.getElementById('c_name').value.trim();
+    let tel = document.getElementById('c_tel').value.trim();
+    let age = document.getElementById('c_age').value.trim();
+    let birthday = document.getElementById('c_birthday').value;
+    let address = document.getElementById('c_address').value.trim();
+    let wechat = document.getElementById('c_wechat').value.trim();
+    let remark = document.getElementById('c_remark').value.trim();
+    
+    if(!name) { alert('请输入客户姓名！'); return; }
+    
+    let customer = {
+        name, tel, age, birthday, address, wechat, remark,
+        id: Date.now(),
+        time: new Date().toLocaleString()
+    };
+    
+    customers.unshift(customer);
+    saveData();
+    alert('客户保存成功！');
+    
+    document.getElementById('c_name').value = '';
+    document.getElementById('c_tel').value = '';
+    document.getElementById('c_age').value = '';
+    document.getElementById('c_birthday').value = '';
+    document.getElementById('c_address').value = '';
+    document.getElementById('c_wechat').value = '';
+    document.getElementById('c_remark').value = '';
+    
+    renderCustomerList();
+}
+
+// 渲染客户列表
+function renderCustomerList(filteredCustomers = customers) {
+    let d = document.getElementById('customerList');
+    d.innerHTML = '';
+    
+    if(filteredCustomers.length === 0) {
+        d.innerHTML = '<div class="list-item">暂无客户信息</div>';
+        return;
+    }
+    
+    filteredCustomers.forEach(customer => {
+        d.innerHTML += `
+        <div class="list-item">
+            <div class="title">${customer.name} | ${customer.tel}</div>
+            <div class="info">
+                年龄：${customer.age || '未填'} | 生日：${customer.birthday || '未填'}<br>
+                住址：${customer.address || '未填'} | 微信：${customer.wechat || '未填'}<br>
+                备注：${customer.remark || '无'}<br>
+                登记时间：${customer.time}
+            </div>
+            <div style="margin-top: 8px; display: flex; gap: 5px;">
+                <button onclick="editCustomer(${customer.id})" style="flex: 1; padding: 5px; font-size: 12px; background: #4092e8; color: white; border: none; border-radius: 4px;">编辑</button>
+                <button onclick="deleteCustomer(${customer.id})" style="flex: 1; padding: 5px; font-size: 12px; background: #e65050; color: white; border: none; border-radius: 4px;">删除</button>
+            </div>
+        </div>`;
+    });
+}
+
+// 编辑客户
+function editCustomer(id) {
+    let customer = customers.find(c => c.id === id);
+    if(customer) {
+        document.getElementById('c_name').value = customer.name;
+        document.getElementById('c_tel').value = customer.tel;
+        document.getElementById('c_age').value = customer.age || '';
+        document.getElementById('c_birthday').value = customer.birthday || '';
+        document.getElementById('c_address').value = customer.address || '';
+        document.getElementById('c_wechat').value = customer.wechat || '';
+        document.getElementById('c_remark').value = customer.remark || '';
+        
+        // 替换保存按钮为更新按钮
+        let saveBtn = document.querySelector('#customer .btn');
+        saveBtn.textContent = '更新客户';
+        saveBtn.onclick = function() {
+            updateCustomer(id);
+        };
+    }
+}
+
+// 更新客户
+function updateCustomer(id) {
+    let name = document.getElementById('c_name').value.trim();
+    let tel = document.getElementById('c_tel').value.trim();
+    let age = document.getElementById('c_age').value.trim();
+    let birthday = document.getElementById('c_birthday').value;
+    let address = document.getElementById('c_address').value.trim();
+    let wechat = document.getElementById('c_wechat').value.trim();
+    let remark = document.getElementById('c_remark').value.trim();
+    
+    if(!name) { alert('请输入客户姓名！'); return; }
+    
+    let index = customers.findIndex(c => c.id === id);
+    if(index !== -1) {
+        customers[index] = {
+            ...customers[index],
+            name, tel, age, birthday, address, wechat, remark
+        };
+        localStorage.setItem('yibainian_customers', JSON.stringify(customers));
+        alert('客户更新成功！');
+        
+        // 恢复保存按钮
+        let saveBtn = document.querySelector('#customer .btn');
+        saveBtn.textContent = '保存客户';
+        saveBtn.onclick = saveCustomer;
+        
+        document.getElementById('c_name').value = '';
+        document.getElementById('c_tel').value = '';
+        document.getElementById('c_age').value = '';
+        document.getElementById('c_birthday').value = '';
+        document.getElementById('c_address').value = '';
+        document.getElementById('c_wechat').value = '';
+        document.getElementById('c_remark').value = '';
+        
+        renderCustomerList();
+    }
+}
+
+// 删除客户
+function deleteCustomer(id) {
+    if(confirm('确定要删除该客户吗？')) {
+        customers = customers.filter(c => c.id !== id);
+        localStorage.setItem('yibainian_customers', JSON.stringify(customers));
+        renderCustomerList();
+        alert('客户删除成功！');
+    }
+}
+
+// 搜索客户
+function searchCustomer() {
+    let keyword = document.getElementById('search_customer').value.toLowerCase();
+    let filtered = customers.filter(c => 
+        c.name.toLowerCase().includes(keyword) || 
+        c.tel.toLowerCase().includes(keyword)
+    );
+    renderCustomerList(filtered);
+}
+
+// 加载客户列表到开卡下拉框
+function loadCardCustomerList() {
+    let sel = document.getElementById('card_name');
+    sel.innerHTML = '<option value="">请选择客户</option>';
+    customers.forEach(customer => {
+        sel.innerHTML += `<option value="${customer.name}">${customer.name} (${customer.tel})</option>`;
+    });
+}
+
+// 客户开卡
+function saveCard() {
+    let name = document.getElementById('card_name').value.trim();
+    let type = document.getElementById('card_type').value;
+    let price = document.getElementById('card_price').value;
+    let times = document.getElementById('card_times').value;
+    let date = document.getElementById('card_date').value;
+    let sign = cardCanvas ? cardCanvas.toDataURL() : '';
+    let staffSign = document.getElementById('staff_sign').value.trim();
+    let time = new Date().toLocaleString();
+    
+    if(!name || !times || !date || !sign || !staffSign) {
+        alert('请填写完整信息：姓名、次数、日期、客户签名、员工签名！');
+        return;
+    }
+    
+    let card = {
+        name, type, price,
+        times:parseInt(times),
+        remain:parseInt(times),
+        date, sign, staffSign, time
+    };
+    
+    cards.unshift(card);
+    saveData();
+    alert('开卡成功！');
+    
+    document.getElementById('card_name').value = '';
+    document.getElementById('card_price').value = '';
+    document.getElementById('card_times').value = '';
+    document.getElementById('card_date').value = '';
+    document.getElementById('staff_sign').value = '';
+    clearCardSignature();
+    
+    renderCardList();
+}
+
+function renderCardList() {
+    let d = document.getElementById('cardList'); d.innerHTML = '';
+    cards.forEach(i=>{
+        d.innerHTML+=`
+        <div class="list-item">
+            <div class="title">${i.name} | ${i.type}</div>
+            <div class="info">
+            总次数：${i.times} | 剩余：${i.remain}次 | 金额：${i.price}元<br>
+            开卡日期：${i.date}
+            </div>
+            ${i.sign ? `<div style="margin-top:5px;"><p style="font-size:12px; color:#666;">客户签名：</p><img src="${i.sign}" style="width:150px;height:50px;border:1px solid #ddd;border-radius:4px;"></div>` : ''}
+            ${i.staffSign ? `<div style="margin-top:5px;"><p style="font-size:12px; color:#666;">员工签字：${i.staffSign}</p></div>` : ''}
+        </div>`;
+    });
+}
+
+// 打卡+扣次
+function saveCheckin() {
+    let name = document.getElementById('in_name').value;
+    let cardIndex = document.getElementById('in_card').value;
+    let tech = document.getElementById('in_tech').value;
+    let techFee = parseInt(document.getElementById('in_tech_fee').value) || 0;
+    let remark = document.getElementById('in_remark').value;
+    let signatureData = canvas.toDataURL();
+
+    if(!name) { alert('请选择客户！'); return; }
+    if(!cardIndex) { alert('请选择卡项目！'); return; }
+
+    let customerCards = cards.filter(c=>c.name===name);
+    let selectedCard = customerCards[parseInt(cardIndex)];
+
+    if(!selectedCard) { alert('未找到卡信息！'); return; }
+    if(selectedCard.remain <= 0) { alert('次数已用完！'); return; }
+
+    selectedCard.remain -= 1;
+
+    let log = {
+        name, type: selectedCard.type, tech, techFee, remark,
+        remain: selectedCard.remain,
+        time: new Date().toLocaleString(),
+        signature: signatureData
+    };
+    checkins.unshift(log);
+    saveData();
+
+    alert('打卡成功！剩余：' + selectedCard.remain + '次');
+    document.getElementById('in_name').value = '';
+    document.getElementById('in_card').innerHTML = '<option value="">请选择卡项目</option>';
+    document.getElementById('show_type').value = '';
+    document.getElementById('show_remain').value = '';
+    document.getElementById('in_tech').value = '';
+    document.getElementById('in_tech_fee').value = '0';
+    document.getElementById('in_remark').value = '';
+    clearSignature();
+
+    renderCheckinList();
+    renderCardList();
+}
+
+function renderCheckinList() {
+    let d = document.getElementById('checkinList'); d.innerHTML = '';
+    checkins.forEach(i=>{
+        d.innerHTML+=`<div class="list-item">
+            <div class="title">${i.name} | ${i.type}</div>
+            <div class="info">技师：${i.tech||'无'} ${i.techFee > 0 ? '| 手工费：'+i.techFee+'元' : ''} | 剩余：${i.remain}次<br>时间：${i.time}<br>备注：${i.remark||'无'}</div>
+            ${i.signature ? `<div style="margin-top:5px;"><img src="${i.signature}" style="width:150px;height:50px;border:1px solid #ddd;border-radius:4px;"></div>` : ''}
+        </div>`;
+    });
+}
+
+// 销卡功能
+function saveCancel() {
+    let name = document.getElementById('cancel_name').value.trim();
+    let cardType = document.getElementById('cancel_card_type').value;
+    let reason = document.getElementById('cancel_reason').value;
+    let refund = document.getElementById('cancel_refund').value;
+    let sign = cancelCanvas ? cancelCanvas.toDataURL() : '';
+    if(!name || !cardType || !sign) { alert('姓名+卡类型+签字必填！'); return; }
+    
+    let find = cards.find(c=>c.name===name && c.type===cardType);
+    if(find) { find.remain = 0; }
+    
+    let log = {name, cardType, reason, refund, sign, time:new Date().toLocaleString()};
+    cancels.unshift(log);
+    saveData();
+    alert('销卡成功！客户已注销');
+    document.getElementById('cancel_name').value = '';
+    document.getElementById('cancel_card_type').value = '';
+    document.getElementById('cancel_reason').value = '';
+    document.getElementById('cancel_refund').value = '';
+    clearCancelSignature();
+    renderCancelList(); renderCardList();
+}
+
+// 数据中心
+function renderDataCenter() {
+    // 计算卡类型分布
+    let cardTypeStats = {};
+    cards.forEach(card => {
+        let type = card.type || '其他';
+        cardTypeStats[type] = (cardTypeStats[type] || 0) + 1;
+    });
+    
+    // 计算客户年龄分布
+    let ageStats = {
+        '0-20': 0,
+        '21-30': 0,
+        '31-40': 0,
+        '41-50': 0,
+        '51+': 0
+    };
+    customers.forEach(customer => {
+        let age = parseInt(customer.age) || 0;
+        if (age <= 20) ageStats['0-20']++;
+        else if (age <= 30) ageStats['21-30']++;
+        else if (age <= 40) ageStats['31-40']++;
+        else if (age <= 50) ageStats['41-50']++;
+        else ageStats['51+']++;
+    });
+    
+    // 计算客户活跃度
+    let activeCustomers = new Set(checkins.map(c => c.name));
+    
+    // 计算卡销售统计（每日、每周、每月）
+    let salesStats = calculateSalesStats();
+    
+    // 计算客户开卡和打卡统计
+    let customerStats = calculateCustomerStats();
+    
+    let statsHtml = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div style="background:#6ba995;color:white;padding:15px;border-radius:8px;text-align:center;">
+                <div style="font-size:24px;font-weight:bold;">${customers.length}</div>
+                <div style="font-size:12px;">客户总数</div>
+            </div>
+            <div style="background:#4092e8;color:white;padding:15px;border-radius:8px;text-align:center;">
+                <div style="font-size:24px;font-weight:bold;">${cards.length}</div>
+                <div style="font-size:12px;">开卡总数</div>
+            </div>
+            <div style="background:#e65050;color:white;padding:15px;border-radius:8px;text-align:center;">
+                <div style="font-size:24px;font-weight:bold;">${cancels.length}</div>
+                <div style="font-size:12px;">销卡总数</div>
+            </div>
+            <div style="background:#f5a623;color:white;padding:15px;border-radius:8px;text-align:center;">
+                <div style="font-size:24px;font-weight:bold;">${packages.length}</div>
+                <div style="font-size:12px;">员工总数</div>
+            </div>
+            <div style="background:#7ed321;color:white;padding:15px;border-radius:8px;text-align:center;">
+                <div style="font-size:24px;font-weight:bold;">${checkins.length}</div>
+                <div style="font-size:12px;">打卡总次数</div>
+            </div>
+            <div style="background:#9013fe;color:white;padding:15px;border-radius:8px;text-align:center;">
+                <div style="font-size:24px;font-weight:bold;">${getTodayCheckins()}</div>
+                <div style="font-size:12px;">今日打卡</div>
+            </div>
+            <div style="background:#bd10e0;color:white;padding:15px;border-radius:8px;text-align:center;">
+                <div style="font-size:24px;font-weight:bold;">${activeCustomers.size}</div>
+                <div style="font-size:12px;">活跃客户</div>
+            </div>
+            <div style="background:#50e3c2;color:white;padding:15px;border-radius:8px;text-align:center;">
+                <div style="font-size:24px;font-weight:bold;">${Object.keys(cardTypeStats).length}</div>
+                <div style="font-size:12px;">卡类型数</div>
+            </div>
+        </div>
+        
+        <div style="margin-top:20px;">
+            <h4 style="margin-bottom:10px;color:#333;">💰 技师手工费统计</h4>
+            ${renderTechFeeStats()}
+        </div>
+        
+        <div style="margin-top:20px;">
+            <h4 style="margin-bottom:10px;color:#333;">� 卡销售统计</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+                <div style="background:#f8f9fa;padding:15px;border-radius:8px;border-left:4px solid #6ba995;">
+                    <div style="font-size:12px;color:#666;">今日销售</div>
+                    <div style="font-size:20px;font-weight:bold;color:#6ba995;margin-top:5px;">${salesStats.today.count}张</div>
+                    <div style="font-size:14px;color:#333;margin-top:5px;">¥${salesStats.today.amount}</div>
+                </div>
+                <div style="background:#f8f9fa;padding:15px;border-radius:8px;border-left:4px solid #4092e8;">
+                    <div style="font-size:12px;color:#666;">本周销售</div>
+                    <div style="font-size:20px;font-weight:bold;color:#4092e8;margin-top:5px;">${salesStats.week.count}张</div>
+                    <div style="font-size:14px;color:#333;margin-top:5px;">¥${salesStats.week.amount}</div>
+                </div>
+                <div style="background:#f8f9fa;padding:15px;border-radius:8px;border-left:4px solid #f5a623;">
+                    <div style="font-size:12px;color:#666;">本月销售</div>
+                    <div style="font-size:20px;font-weight:bold;color:#f5a623;margin-top:5px;">${salesStats.month.count}张</div>
+                    <div style="font-size:14px;color:#333;margin-top:5px;">¥${salesStats.month.amount}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top:20px;">
+            <h4 style="margin-bottom:10px;color:#333;">� 卡类型分布</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));gap:10px;">
+                ${Object.entries(cardTypeStats).map(([type, count]) => `
+                    <div style="background:#f8f9fa;padding:12px;border-radius:8px;border-left:4px solid #4092e8;">
+                        <div style="font-weight:bold;color:#333;">${type}</div>
+                        <div style="font-size:20px;color:#4092e8;margin-top:5px;">${count}张</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        
+        <div style="margin-top:20px;">
+            <h4 style="margin-bottom:10px;color:#333;">🎂 客户年龄分布</h4>
+            <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:10px;">
+                ${Object.entries(ageStats).map(([range, count]) => `
+                    <div style="background:#f8f9fa;padding:12px;border-radius:8px;border-left:4px solid #f5a623;">
+                        <div style="font-weight:bold;color:#333;">${range}岁</div>
+                        <div style="font-size:20px;color:#f5a623;margin-top:5px;">${count}人</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        
+        <div style="margin-top:20px;">
+            <h4 style="margin-bottom:10px;color:#333;">👤 客户开卡与打卡统计</h4>
+            <div style="max-height:400px;overflow-y:auto;">
+                <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;padding:10px;background:#f8f9fa;border-radius:8px;margin-bottom:10px;">
+                    <div style="font-weight:bold;color:#333;">客户姓名</div>
+                    <div style="font-weight:bold;color:#333;">开卡数量</div>
+                    <div style="font-weight:bold;color:#333;">打卡次数</div>
+                    <div style="font-weight:bold;color:#333;">消费金额</div>
+                </div>
+                ${Object.entries(customerStats).map(([name, stats]) => `
+                    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;padding:10px;background:white;border-radius:8px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                        <div style="color:#333;">${name}</div>
+                        <div style="color:#4092e8;">${stats.cardCount}张</div>
+                        <div style="color:#6ba995;">${stats.checkinCount}次</div>
+                        <div style="color:#f5a623;">¥${stats.totalAmount}</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        
+        <div style="margin-top:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <h4 style="color:#333;">📊 全店开卡数据统计</h4>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn btn-sm" onclick="updateCardStats('day')" style="padding:5px 10px;">按日</button>
+                    <button class="btn btn-sm" onclick="updateCardStats('week')" style="padding:5px 10px;">按周</button>
+                    <button class="btn btn-sm" onclick="updateCardStats('month')" style="padding:5px 10px;">按月</button>
+                </div>
+            </div>
+            <div id="cardStats" style="background:white;padding:20px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                ${renderCardStats('month')}
+            </div>
+        </div>
+    `;
+    document.getElementById('dataStats').innerHTML = statsHtml;
+    
+    renderCheckinTrend();
+}
+
+function renderTechFeeStats() {
+    let techFees = {};
+    checkins.forEach(c => {
+        if(c.tech && c.techFee > 0) {
+            if(!techFees[c.tech]) {
+                techFees[c.tech] = { count: 0, total: 0 };
+            }
+            techFees[c.tech].count++;
+            techFees[c.tech].total += c.techFee;
+        }
+    });
+    
+    if(Object.keys(techFees).length === 0) {
+        return '<p style="color:#888;font-size:14px;">暂无手工费记录</p>';
+    }
+    
+    let html = '<div style="display:grid;grid-template-columns:1fr;gap:8px;">';
+    for(let tech in techFees) {
+        html += `
+            <div style="background:#f8f9fa;padding:12px;border-radius:8px;border-left:4px solid #6ba995;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <span style="font-weight:bold;color:#333;">${tech}</span>
+                    <span style="color:#666;font-size:12px;margin-left:10px;">服务${techFees[tech].count}次</span>
+                </div>
+                <div style="font-size:18px;font-weight:bold;color:#e65050;">¥${techFees[tech].total}</div>
+            </div>
+        `;
+    }
+    html += '</div>';
+    return html;
+}
+
+function getTodayCheckins() {
+    let today = new Date().toLocaleDateString();
+    return checkins.filter(c => c.time.includes(today)).length;
+}
+
+// 计算卡销售统计（每日、每周、每月）
+function calculateSalesStats() {
+    let today = new Date();
+    let todayStr = today.toLocaleDateString();
+    
+    // 计算本周开始日期
+    let weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay() + 1); // 本周一
+    
+    // 计算本月开始日期
+    let monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    let stats = {
+        today: { count: 0, amount: 0 },
+        week: { count: 0, amount: 0 },
+        month: { count: 0, amount: 0 }
+    };
+    
+    cards.forEach(card => {
+        // 假设卡有创建时间，如果没有则使用当前时间
+        let cardDate = new Date(card.createTime || new Date());
+        let cardDateStr = cardDate.toLocaleDateString();
+        
+        // 计算卡的金额（假设卡有金额属性，如果没有则默认为0）
+        let cardAmount = parseInt(card.price) || 0;
+        
+        // 今日销售
+        if(cardDateStr === todayStr) {
+            stats.today.count++;
+            stats.today.amount += cardAmount;
+        }
+        
+        // 本周销售
+        if(cardDate >= weekStart) {
+            stats.week.count++;
+            stats.week.amount += cardAmount;
+        }
+        
+        // 本月销售
+        if(cardDate >= monthStart) {
+            stats.month.count++;
+            stats.month.amount += cardAmount;
+        }
+    });
+    
+    return stats;
+}
+
+// 计算客户开卡和打卡统计
+function calculateCustomerStats() {
+    let customerStats = {};
+    
+    // 初始化客户统计
+    customers.forEach(customer => {
+        customerStats[customer.name] = {
+            cardCount: 0,
+            checkinCount: 0,
+            totalAmount: 0
+        };
+    });
+    
+    // 统计开卡数量和金额
+    cards.forEach(card => {
+        if(customerStats[card.name]) {
+            customerStats[card.name].cardCount++;
+            customerStats[card.name].totalAmount += parseInt(card.price) || 0;
+        }
+    });
+    
+    // 统计打卡次数
+    checkins.forEach(checkin => {
+        if(customerStats[checkin.name]) {
+            customerStats[checkin.name].checkinCount++;
+        }
+    });
+    
+    return customerStats;
+}
+
+// 更新全店开卡数据统计
+function updateCardStats(period) {
+    document.getElementById('cardStats').innerHTML = renderCardStats(period);
+}
+
+// 渲染全店开卡数据统计
+function renderCardStats(period) {
+    let today = new Date();
+    let filteredCards = [];
+    
+    // 根据时间段筛选卡片
+    if(period === 'day') {
+        let todayStr = today.toLocaleDateString();
+        filteredCards = cards.filter(card => {
+            let cardDate = new Date(card.createTime || new Date());
+            return cardDate.toLocaleDateString() === todayStr;
+        });
+    } else if(period === 'week') {
+        let weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay() + 1); // 本周一
+        filteredCards = cards.filter(card => {
+            let cardDate = new Date(card.createTime || new Date());
+            return cardDate >= weekStart;
+        });
+    } else if(period === 'month') {
+        let monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        filteredCards = cards.filter(card => {
+            let cardDate = new Date(card.createTime || new Date());
+            return cardDate >= monthStart;
+        });
+    }
+    
+    // 计算统计数据
+    let totalCards = filteredCards.length;
+    let totalAmount = filteredCards.reduce((sum, card) => sum + (parseInt(card.price) || 0), 0);
+    let uniqueCustomers = new Set(filteredCards.map(card => card.name)).size;
+    
+    // 计算卡类型分布
+    let cardTypeDistribution = {};
+    filteredCards.forEach(card => {
+        let type = card.type || '其他';
+        cardTypeDistribution[type] = (cardTypeDistribution[type] || 0) + 1;
+    });
+    
+    // 生成统计HTML
+    let html = `
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:15px;margin-bottom:20px;">
+            <div style="background:#6ba995;color:white;padding:20px;border-radius:8px;text-align:center;">
+                <div style="font-size:14px;">开卡总数</div>
+                <div style="font-size:28px;font-weight:bold;margin-top:10px;">${totalCards}</div>
+                <div style="font-size:12px;margin-top:5px;">张</div>
+            </div>
+            <div style="background:#4092e8;color:white;padding:20px;border-radius:8px;text-align:center;">
+                <div style="font-size:14px;">消费金额</div>
+                <div style="font-size:28px;font-weight:bold;margin-top:10px;">¥${totalAmount}</div>
+                <div style="font-size:12px;margin-top:5px;">元</div>
+            </div>
+            <div style="background:#f5a623;color:white;padding:20px;border-radius:8px;text-align:center;">
+                <div style="font-size:14px;">开卡人数</div>
+                <div style="font-size:28px;font-weight:bold;margin-top:10px;">${uniqueCustomers}</div>
+                <div style="font-size:12px;margin-top:5px;">人</div>
+            </div>
+            <div style="background:#7ed321;color:white;padding:20px;border-radius:8px;text-align:center;">
+                <div style="font-size:14px;">卡类型数</div>
+                <div style="font-size:28px;font-weight:bold;margin-top:10px;">${Object.keys(cardTypeDistribution).length}</div>
+                <div style="font-size:12px;margin-top:5px;">种</div>
+            </div>
+        </div>
+        
+        <div style="margin-top:20px;">
+            <h5 style="margin-bottom:15px;color:#333;">💳 卡类型分布</h5>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;">
+                ${Object.entries(cardTypeDistribution).map(([type, count]) => {
+                    let percentage = totalCards > 0 ? Math.round((count / totalCards) * 100) : 0;
+                    return `
+                        <div style="background:#f8f9fa;padding:15px;border-radius:8px;border-left:4px solid #4092e8;">
+                            <div style="font-weight:bold;color:#333;">${type}</div>
+                            <div style="font-size:20px;color:#4092e8;margin-top:8px;">${count}张</div>
+                            <div style="font-size:12px;color:#666;margin-top:5px;">${percentage}%</div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+        
+        ${filteredCards.length > 0 ? `
+        <div style="margin-top:20px;">
+            <h5 style="margin-bottom:15px;color:#333;">📋 开卡明细</h5>
+            <div style="max-height:300px;overflow-y:auto;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:10px;padding:10px;background:#f8f9fa;border-radius:8px;margin-bottom:10px;">
+                    <div style="font-weight:bold;color:#333;">客户姓名</div>
+                    <div style="font-weight:bold;color:#333;">卡类型</div>
+                    <div style="font-weight:bold;color:#333;">金额</div>
+                    <div style="font-weight:bold;color:#333;">次数</div>
+                    <div style="font-weight:bold;color:#333;">时间</div>
+                </div>
+                ${filteredCards.map(card => `
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:10px;padding:10px;background:white;border-radius:8px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                        <div style="color:#333;">${card.name}</div>
+                        <div style="color:#4092e8;">${card.type}</div>
+                        <div style="color:#f5a623;">¥${card.price || 0}</div>
+                        <div style="color:#6ba995;">${card.total || 0}次</div>
+                        <div style="color:#666;font-size:12px;">${card.createTime || new Date().toLocaleString()}</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : `<div style="text-align:center;padding:40px;color:#888;">暂无开卡数据</div>`}
+    `;
+    
+    return html;
+}
+
+function renderCheckinTrend() {
+    let container = document.getElementById('checkinTrend');
+    if(!container) return;
+    
+    let days = [];
+    for(let i = 6; i >= 0; i--) {
+        let d = new Date();
+        d.setDate(d.getDate() - i);
+        days.push(d.toLocaleDateString());
+    }
+    
+    let counts = days.map(day => checkins.filter(c => c.time && c.time.includes(day)).length);
+    let maxCount = Math.max(...counts, 1);
+    
+    let html = '';
+    days.forEach((day, index) => {
+        let height = (counts[index] / maxCount) * 120;
+        let dateStr = day.split('/')[1] + '/' + day.split('/')[2];
+        html += `
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+                <div style="background:#6ba995;width:100%;height:${height}px;border-radius:4px 4px 0 0;"></div>
+                <div style="font-size:11px;margin-top:5px;color:#666;">${dateStr}</div>
+                <div style="font-size:12px;font-weight:bold;color:#333;">${counts[index]}</div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// 清空所有数据
+function clearAllData() {
+    if(confirm('确定要清空所有数据吗？此操作不可恢复！\n\n建议先导出数据备份！')) {
+        localStorage.removeItem('yibainian_customers');
+        localStorage.removeItem('yibainian_cards');
+        localStorage.removeItem('yibainian_checkins');
+        localStorage.removeItem('yibainian_cancels');
+        localStorage.removeItem('yibainian_packages');
+        
+        customers = [];
+        cards = [];
+        checkins = [];
+        cancels = [];
+        packages = [];
+        
+        alert('所有数据已清空！');
+        renderDataCenter();
+    }
+}
+
+// 导出数据备份
+function exportData() {
+    let data = {
+        customers: customers,
+        cards: cards,
+        checkins: checkins,
+        cancels: cancels,
+        packages: packages,
+        exportTime: new Date().toLocaleString()
+    };
+    
+    let json = JSON.stringify(data, null, 2);
+    let blob = new Blob([json], {type: 'application/json'});
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = '逸百年康养美容管理系统数据备份_' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    alert('数据备份已导出！');
+}
+
+// 导入数据备份
+function importData() {
+    document.getElementById('importFile').click();
+}
+
+// 处理导入文件
+function handleImportFile(event) {
+    let file = event.target.files[0];
+    if(!file) return;
+    
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            let data = JSON.parse(e.target.result);
+            
+            if(!data.customers || !data.cards || !data.checkins || !data.cancels || !data.packages) {
+                alert('无效的备份文件！');
+                return;
+            }
+            
+            if(confirm('导入数据将覆盖现有数据，确定要继续吗？')) {
+                localStorage.setItem('yibainian_customers', JSON.stringify(data.customers));
+                localStorage.setItem('yibainian_cards', JSON.stringify(data.cards));
+                localStorage.setItem('yibainian_checkins', JSON.stringify(data.checkins));
+                localStorage.setItem('yibainian_cancels', JSON.stringify(data.cancels));
+                localStorage.setItem('yibainian_packages', JSON.stringify(data.packages));
+                
+                customers = data.customers;
+                cards = data.cards;
+                checkins = data.checkins;
+                cancels = data.cancels;
+                packages = data.packages;
+                
+                alert('数据导入成功！\n备份时间：' + (data.exportTime || '未知'));
+                renderDataCenter();
+            }
+        } catch(err) {
+            alert('文件解析失败，请确保是有效的备份文件！');
+        }
+    };
+    reader.readAsText(file);
+    
+    event.target.value = '';
+}
+
+function renderCancelList() {
+    let d = document.getElementById('cancelList'); d.innerHTML = '';
+    cancels.forEach(i=>{
+        d.innerHTML += `
+        <div class="list-item">
+            <div class="title">${i.name} | 已销卡</div>
+            <div class="info">
+                卡类型：${i.cardType || '未指定'} | 原因：${i.reason} | 退款：${i.refund}元<br>
+                时间：${i.time}
+            </div>
+            ${i.sign ? `<div style="margin-top:5px;"><p style="font-size:12px; color:#666;">客户签字：</p><img src="${i.sign}" style="width:150px;height:50px;border:1px solid #ddd;border-radius:4px;"></div>` : ''}
+        </div>`;
+    });
+}
+
+// 打印功能
+function printCardList() { goPage('card'); setTimeout(()=>window.print(), 300); }
+function printCheckinList() { goPage('checkin'); setTimeout(()=>window.print(), 300); }
+function printCancelList() { goPage('cancel'); setTimeout(()=>window.print(), 300); }
+
+// 员工
+function saveEmployee() {
+    let name = document.getElementById('e_name').value.trim();
+    let position = document.getElementById('e_position').value.trim();
+    let tel = document.getElementById('e_tel').value.trim();
+    let remark = document.getElementById('e_remark').value.trim();
+    
+    if(!name) { alert('请输入员工姓名！'); return; }
+    
+    let employee = {
+        name, position, tel, remark,
+        id: Date.now(),
+        time: new Date().toLocaleString()
+    };
+    
+    packages.unshift(employee);
+    saveData();
+    alert('员工保存成功！');
+    
+    document.getElementById('e_name').value = '';
+    document.getElementById('e_position').value = '';
+    document.getElementById('e_tel').value = '';
+    document.getElementById('e_remark').value = '';
+    
+    renderEmployeeList();
+}
+
+// 渲染员工列表
+function renderEmployeeList() {
+    let d = document.getElementById('employeeList');
+    d.innerHTML = '';
+    
+    if(packages.length === 0) {
+        d.innerHTML = '<div class="list-item">暂无员工信息</div>';
+        return;
+    }
+    
+    packages.forEach(emp => {
+        d.innerHTML += `
+        <div class="list-item">
+            <div class="title">${emp.name} | ${emp.position}</div>
+            <div class="info">
+                电话：${emp.tel || '无'}<br>
+                备注：${emp.remark || '无'}<br>
+                登记时间：${emp.time}
+            </div>
+            <div style="margin-top: 8px; display: flex; gap: 5px;">
+                <button onclick="editEmployee(${emp.id})" style="flex: 1; padding: 5px; font-size: 12px; background: #4092e8; color: white; border: none; border-radius: 4px;">编辑</button>
+                <button onclick="deleteEmployee(${emp.id})" style="flex: 1; padding: 5px; font-size: 12px; background: #e65050; color: white; border: none; border-radius: 4px;">删除</button>
+            </div>
+        </div>`;
+    });
+}
+
+// 编辑员工
+function editEmployee(id) {
+    let emp = packages.find(e => e.id === id);
+    if(emp) {
+        document.getElementById('e_name').value = emp.name;
+        document.getElementById('e_position').value = emp.position;
+        document.getElementById('e_tel').value = emp.tel;
+        document.getElementById('e_remark').value = emp.remark;
+        
+        // 替换保存按钮为更新按钮
+        let saveBtn = document.querySelector('#employee .btn');
+        saveBtn.textContent = '更新员工';
+        saveBtn.onclick = function() {
+            updateEmployee(id);
+        };
+    }
+}
+
+// 更新员工
+function updateEmployee(id) {
+    let name = document.getElementById('e_name').value.trim();
+    let position = document.getElementById('e_position').value.trim();
+    let tel = document.getElementById('e_tel').value.trim();
+    let remark = document.getElementById('e_remark').value.trim();
+    
+    if(!name) { alert('请输入员工姓名！'); return; }
+    
+    let index = packages.findIndex(e => e.id === id);
+    if(index !== -1) {
+        packages[index] = {
+            ...packages[index],
+            name, position, tel, remark
+        };
+        saveData();
+        alert('员工更新成功！');
+        
+        // 恢复保存按钮
+        let saveBtn = document.querySelector('#employee .btn');
+        saveBtn.textContent = '保存员工';
+        saveBtn.onclick = saveEmployee;
+        
+        document.getElementById('e_name').value = '';
+        document.getElementById('e_position').value = '';
+        document.getElementById('e_tel').value = '';
+        document.getElementById('e_remark').value = '';
+        
+        renderEmployeeList();
+    }
+}
+
+// 删除员工
+function deleteEmployee(id) {
+    if(confirm('确定要删除该员工吗？')) {
+        packages = packages.filter(e => e.id !== id);
+        saveData();
+        renderEmployeeList();
+        alert('员工删除成功！');
+    }
+}
+
+// 卡类型管理
+let cardTypes = JSON.parse(localStorage.getItem('yibainian_cardTypes')) || ['康养卡', '美容卡', '综合卡', '体验卡', '次卡', '季卡', '年卡'];
+
+function openCardTypeSettings() {
+    document.getElementById('cardTypeModal').style.display = 'block';
+    renderCardTypeList();
+}
+
+function closeCardTypeModal() {
+    document.getElementById('cardTypeModal').style.display = 'none';
+    updateCardTypeSelect();
+}
+
+function addCardType() {
+    let newType = document.getElementById('new_card_type').value.trim();
+    if(!newType) {
+        alert('请输入卡类型！');
+        return;
+    }
+    if(cardTypes.includes(newType)) {
+        alert('该卡类型已存在！');
+        return;
+    }
+    cardTypes.push(newType);
+    localStorage.setItem('yibainian_cardTypes', JSON.stringify(cardTypes));
+    document.getElementById('new_card_type').value = '';
+    renderCardTypeList();
+    updateCardTypeSelect();
+    alert('卡类型添加成功！');
+}
+
+function deleteCardType(type) {
+    if(confirm('确定要删除该卡类型吗？')) {
+        cardTypes = cardTypes.filter(t => t !== type);
+        localStorage.setItem('yibainian_cardTypes', JSON.stringify(cardTypes));
+        renderCardTypeList();
+        updateCardTypeSelect();
+        alert('卡类型删除成功！');
+    }
+}
+
+function renderCardTypeList() {
+    let container = document.getElementById('cardTypeList');
+    container.innerHTML = '';
+    cardTypes.forEach(type => {
+        container.innerHTML += `
+            <div style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+                <span>${type}</span>
+                <button onclick="deleteCardType('${type}')" style="background: #e65050; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">删除</button>
+            </div>
+        `;
+    });
+}
+
+function updateCardTypeSelect() {
+    let select = document.getElementById('card_type');
+    select.innerHTML = '';
+    cardTypes.forEach(type => {
+        select.innerHTML += `<option>${type}</option>`;
+    });
+}
+
+// 登录/注册功能
+
+// 切换登录标签
+function switchLoginTab(tab) {
+    // 隐藏所有表单
+    document.querySelectorAll('.login-form').forEach(form => form.classList.remove('active'));
+    document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+    
+    // 显示选中的表单
+    document.getElementById(tab + 'Form').classList.add('active');
+    document.getElementById(tab + 'Tab').classList.add('active');
+}
+
+// 生成验证码
+function generateVerificationCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// 发送验证码
+function sendVerificationCode() {
+    let phone = document.getElementById('codePhone').value.trim();
+    if(!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+        alert('请输入有效的手机号码！');
+        return;
+    }
+    
+    let code = generateVerificationCode();
+    alert('验证码已发送：' + code);
+    
+    // 模拟发送验证码，实际项目中应该调用后端API
+    localStorage.setItem('yibainian_verificationCode', code);
+    localStorage.setItem('yibainian_verificationPhone', phone);
+    
+    // 倒计时
+    let btn = document.getElementById('sendCodeBtn');
+    let countdown = 60;
+    btn.disabled = true;
+    btn.textContent = countdown + '秒后重发';
+    
+    let timer = setInterval(() => {
+        countdown--;
+        btn.textContent = countdown + '秒后重发';
+        if(countdown <= 0) {
+            clearInterval(timer);
+            btn.disabled = false;
+            btn.textContent = '获取验证码';
+        }
+    }, 1000);
+}
+
+// 发送注册验证码
+function sendRegisterCode() {
+    let phone = document.getElementById('registerPhone').value.trim();
+    if(!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+        alert('请输入有效的手机号码！');
+        return;
+    }
+    
+    // 检查手机号是否已注册
+    if(users.some(user => user.phone === phone)) {
+        alert('该手机号码已注册！');
+        return;
+    }
+    
+    let code = generateVerificationCode();
+    alert('验证码已发送：' + code);
+    
+    // 模拟发送验证码
+    localStorage.setItem('yibainian_registerCode', code);
+    localStorage.setItem('yibainian_registerPhone', phone);
+    
+    // 倒计时
+    let btn = document.getElementById('sendRegisterCodeBtn');
+    let countdown = 60;
+    btn.disabled = true;
+    btn.textContent = countdown + '秒后重发';
+    
+    let timer = setInterval(() => {
+        countdown--;
+        btn.textContent = countdown + '秒后重发';
+        if(countdown <= 0) {
+            clearInterval(timer);
+            btn.disabled = false;
+            btn.textContent = '获取验证码';
+        }
+    }, 1000);
+}
+
+// 注册用户
+function registerUser() {
+    let phone = document.getElementById('registerPhone').value.trim();
+    let code = document.getElementById('registerCode').value.trim();
+    let password = document.getElementById('registerPassword').value;
+    let confirmPassword = document.getElementById('registerConfirmPassword').value;
+    
+    if(!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+        alert('请输入有效的手机号码！');
+        return;
+    }
+    
+    if(!code) {
+        alert('请输入验证码！');
+        return;
+    }
+    
+    if(!password || password.length < 6) {
+        alert('密码长度至少6位！');
+        return;
+    }
+    
+    if(password !== confirmPassword) {
+        alert('两次输入的密码不一致！');
+        return;
+    }
+    
+    // 验证验证码
+    let storedCode = localStorage.getItem('yibainian_registerCode');
+    let storedPhone = localStorage.getItem('yibainian_registerPhone');
+    
+    if(code !== storedCode || phone !== storedPhone) {
+        alert('验证码错误！');
+        return;
+    }
+    
+    // 检查手机号是否已注册
+    if(users.some(user => user.phone === phone)) {
+        alert('该手机号码已注册！');
+        return;
+    }
+    
+    // 创建新用户
+    let newUser = {
+        id: Date.now(),
+        phone: phone,
+        password: password, // 实际项目中应该加密存储
+        createdAt: new Date().toLocaleString()
+    };
+    
+    users.push(newUser);
+    localStorage.setItem('yibainian_users', JSON.stringify(users));
+    
+    alert('注册成功！请登录');
+    switchLoginTab('login');
+    
+    // 清空表单
+    document.getElementById('registerPhone').value = '';
+    document.getElementById('registerCode').value = '';
+    document.getElementById('registerPassword').value = '';
+    document.getElementById('registerConfirmPassword').value = '';
+}
+
+// 密码登录
+function loginWithPassword() {
+    let phone = document.getElementById('loginPhone').value.trim();
+    let password = document.getElementById('loginPassword').value;
+    
+    if(!phone || !password) {
+        alert('请输入手机号码和密码！');
+        return;
+    }
+    
+    // 查找用户
+    let user = users.find(u => u.phone === phone && u.password === password);
+    
+    if(!user) {
+        alert('手机号码或密码错误！');
+        return;
+    }
+    
+    // 登录成功
+    currentUser = user;
+    localStorage.setItem('yibainian_currentUser', JSON.stringify(currentUser));
+    showMainSystem();
+}
+
+// 验证码登录
+function loginWithCode() {
+    let phone = document.getElementById('codePhone').value.trim();
+    let code = document.getElementById('verificationCode').value.trim();
+    
+    if(!phone || !code) {
+        alert('请输入手机号码和验证码！');
+        return;
+    }
+    
+    // 验证验证码
+    let storedCode = localStorage.getItem('yibainian_verificationCode');
+    let storedPhone = localStorage.getItem('yibainian_verificationPhone');
+    
+    if(code !== storedCode || phone !== storedPhone) {
+        alert('验证码错误！');
+        return;
+    }
+    
+    // 查找用户
+    let user = users.find(u => u.phone === phone);
+    
+    if(!user) {
+        alert('该手机号码未注册！');
+        return;
+    }
+    
+    // 登录成功
+    currentUser = user;
+    localStorage.setItem('yibainian_currentUser', JSON.stringify(currentUser));
+    showMainSystem();
+}
+
+// 显示主系统
+function showMainSystem() {
+    document.getElementById('login').classList.remove('active');
+    document.querySelector('.header').style.display = 'block';
+    document.querySelector('.menu').style.display = 'flex';
+    goPage('home');
+}
+
+// 退出登录
+function logout() {
+    if(confirm('确定要退出登录吗？')) {
+        currentUser = null;
+        localStorage.removeItem('yibainian_currentUser');
+        document.getElementById('login').classList.add('active');
+        document.querySelector('.header').style.display = 'none';
+        document.querySelector('.menu').style.display = 'none';
+        // 隐藏所有页面
+        document.querySelectorAll('.page:not(#login)').forEach(page => page.classList.remove('active'));
+    }
+}
+
+// 页面加载时检查登录状态
+window.onload = function() {
+    if(currentUser) {
+        showMainSystem();
+    }
+};
+</script>
+</body>
 </html>
